@@ -22,6 +22,7 @@ import (
 
 const PRINTER_HOST string = "192.168.0.135"
 const DEBUG bool = true
+const FILEFORMAT = "snap.%05d.png"
 
 func takeSnapshot(snapshotid int) {
 	snapshot, err := http.Get(fmt.Sprintf("http://%s:8080/?action=snapshot", PRINTER_HOST))
@@ -31,7 +32,7 @@ func takeSnapshot(snapshotid int) {
 	}
 	defer snapshot.Body.Close()
 
-	destPath := fmt.Sprintf("snap.%d.png", snapshotid)
+	destPath := fmt.Sprintf(FILEFORMAT, snapshotid)
 	destFile, err := os.Create(destPath)
 	if err != nil {
 		fmt.Printf("Unable to create %s: %s", destPath, err)
