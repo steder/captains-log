@@ -11,6 +11,8 @@ import (
 	"bytes"
 	"github.com/davecgh/go-spew/spew"
 	"math"
+	"net"
+	"log"
 )
 
 /*
@@ -21,14 +23,18 @@ import (
  */
 
 const PRINTER_HOST string = "192.168.0.135"
-const DEBUG bool = true
-const FILEFORMAT = "snap.%05d.png"
+const DEBUG bool = false
+const FILEFORMAT = "snap_%05d.jpg"
 
-func takeSnapshot(snapshotid int) {
+func takeSnapshot(snapshotid int) error {
 	snapshot, err := http.Get(fmt.Sprintf("http://%s:8080/?action=snapshot", PRINTER_HOST))
+	if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
+		fmt.Printf("Skipping snapshot %d", snapshotid)
+		return err
+	}
 	if err != nil {
-		// handle it
-		fmt.Println("Unable to load the snapshot: %s", err)
+		// Shut 'er down
+		log.Fatalf("Unable to load the snapshot: %s", err)
 	}
 	defer snapshot.Body.Close()
 
@@ -42,6 +48,8 @@ func takeSnapshot(snapshotid int) {
 	// TODO check errors here
 	io.Copy(destFile, snapshot.Body)
 	// TODO check more errors here
+
+	return nil
 }
 
 func takeSnapshots(secondsRemaining float64) {
@@ -64,8 +72,11 @@ func takeSnapshots(secondsRemaining float64) {
 	fmt.Printf("Capturing %f frames for a %fs video at %f FPS\n", snapshotCount, videoDuration, fps)
 	fmt.Printf("Capturing frame every %f seconds for remaining %f seconds\n", snapshotDelay.Seconds(), secondsRemaining)
 	// TODO: Replace with a select statement and a timer?
- 	for i := 0; i < int(math.RoundToEven(snapshotCount)); i++ {
-		takeSnapshot(i)
+ 	for i := 0; i < int(math.RoundToEven(snapshotCount)); {
+		err := takeSnapshot(i)
+		if err == nil {
+			i++
+		}
 		time.Sleep(snapshotDelay)
 	}
 }
@@ -149,4 +160,5 @@ func main() {
 		timeRemaining := getPrintJobTimeRemaining()
 		takeSnapshots(float64(timeRemaining))
 	}
+	fmt.Printf("Done!\n")
 }
