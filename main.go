@@ -53,7 +53,6 @@ func takeSnapshot(snapshotid int) error {
 }
 
 func takeSnapshots(secondsRemaining float64) {
-	fmt.Printf("Connecting to %s\n", PRINTER_HOST )
 	fps := 30.0
 	var hours float64 = secondsRemaining / 3600.0
 	fmt.Printf("Hours: %v\n", hours)
@@ -86,7 +85,6 @@ type Printer struct {
 }
 
 func checkAPI(path string, thing interface{}) {
-	fmt.Printf("Connecting to %s\n", PRINTER_HOST)
 	printerEndpoint := fmt.Sprintf("http://%s/api/v1/%s", PRINTER_HOST, path)
 	printerInfo, err := http.Get(printerEndpoint)
 	if err != nil {
@@ -154,11 +152,17 @@ func getPrintJobTimeRemaining() int {
 }
 
 func main() {
-	status := checkPrinterStatus()
-	fmt.Printf("Printer Status: %s\n", status)
-	if status == "printing" {
-		timeRemaining := getPrintJobTimeRemaining()
-		takeSnapshots(float64(timeRemaining))
+	fmt.Printf("Connecting to %s\n", PRINTER_HOST )
+	for {
+		status := checkPrinterStatus()
+		fmt.Printf("Checking printer status: %s ...\n", status)
+		if status == "printing" {
+			fmt.Printf("\nStarting timelapse capture...      \n")
+			timeRemaining := getPrintJobTimeRemaining()
+			takeSnapshots(float64(timeRemaining))
+			break
+		}
+		time.Sleep(5 * time.Second)
 	}
 	fmt.Printf("Done!\n")
 }
