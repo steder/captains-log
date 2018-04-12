@@ -72,10 +72,10 @@ func takeSnapshots(secondsRemaining float64) {
 	fmt.Printf("Capturing frame every %f seconds for remaining %f seconds\n", snapshotDelay.Seconds(), secondsRemaining)
 	// TODO: Replace with a select statement and a timer?
  	for i := 0; i < int(math.RoundToEven(snapshotCount)); {
-		err := takeSnapshot(i)
+	/*	err := takeSnapshot(i)
 		if err == nil {
 			i++
-		}
+		}*/
 		time.Sleep(snapshotDelay)
 	}
 }
@@ -108,11 +108,11 @@ func checkAPI(path string, thing interface{}) {
 	}
 }
 
-func checkPrinterStatus() string {
+/*func checkPrinterStatus() string {
 	var p Printer;
 	checkAPI("printer", &p)
 	return p.Status
-}
+}*/
 
 /*
 /api/v1/print_job API response
@@ -140,6 +140,12 @@ func (j PrintJob) GetStartedTime() (time.Time, error) {
 	return time.Parse("2006-01-02T15:04:05", j.Started)
 }
 
+func getPrintJob() PrintJob {
+	var job PrintJob;
+	checkAPI("print_job", &job)
+	return job
+}
+
 func getPrintJobTimeRemaining() int {
 	var job PrintJob
 	checkAPI("print_job", &job)
@@ -154,9 +160,9 @@ func getPrintJobTimeRemaining() int {
 func main() {
 	fmt.Printf("Connecting to %s\n", PRINTER_HOST )
 	for {
-		status := checkPrinterStatus()
-		fmt.Printf("Checking printer status: %s ...\n", status)
-		if status == "printing" {
+		job := getPrintJob()
+		fmt.Printf("Checking printer status: %v ...\n", job)
+		if job.State == "printing" && job.TimeTotal > 0 {
 			fmt.Printf("\nStarting timelapse capture...      \n")
 			timeRemaining := getPrintJobTimeRemaining()
 			takeSnapshots(float64(timeRemaining))
