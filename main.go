@@ -72,10 +72,10 @@ func takeSnapshots(secondsRemaining float64) {
 	fmt.Printf("Capturing frame every %f seconds for remaining %f seconds\n", snapshotDelay.Seconds(), secondsRemaining)
 	// TODO: Replace with a select statement and a timer?
  	for i := 0; i < int(math.RoundToEven(snapshotCount)); {
-	/*	err := takeSnapshot(i)
+		err := takeSnapshot(i)
 		if err == nil {
 			i++
-		}*/
+		}
 		time.Sleep(snapshotDelay)
 	}
 }
